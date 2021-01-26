@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Post;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Storage;                                   
 
 class PostController extends Controller
 {
@@ -88,9 +88,11 @@ class PostController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit($slug)
     {
-        //
+       $post = Post::where('slug', $slug)->first();
+       
+       return view('posts.edit', compact('post'));
     }
 
     /**
@@ -102,7 +104,35 @@ class PostController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        // get data from form
+        $data = $request->all();
+
+        // validation
+        $request->validate($this->ruleValidation());
+
+         //get post to update
+         $post = Post::find($id);
+
+         //generare slug se ne viene creato uno nuovo, stessa coa fatta in store
+         $data['slug'] = Str::slug($data['title'], '-');
+
+         //se cambia l'img
+         if (!empty($data['path_img'])) {    //ci chiediamo se abbiamo  una nuova img
+             if(!empty($post->path_img)) {   //ci chiediamo se ce ne fosse una in precedenza
+                 Storage::disk('public')->delete($post->path_img);  //cancella completamente la vecchia se presente
+             }
+             $data['path_img'] = Storage::disk('public')->put('images', $data['path_img']);  //aggiungiamo la nuova img
+         }
+
+         //aggiornare/update db
+         $updated = $post->update($data); //ha bisogno di fillable nel model(già messo)
+
+         //verifichiamo se update è andato a buon fine
+         if ($updated) {
+            return redirect()->route('posts.show', $post->slug);
+         } else {
+            return redirect()->route('home');
+         }
     }
 
     /**

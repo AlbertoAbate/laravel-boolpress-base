@@ -5,7 +5,7 @@
         <h1>{{ $post->title }}</h1>
         <div>Ultima modifica: {{ $post->updated_at->diffForHumans() }}</div>
         <div class="actions mb-5">
-            <a class="mt-2 btn btn-primary" href="#">Edit</a>
+            <a class="mt-2 btn btn-primary" href="{{ route('posts.edit', $post->slug) }}">Edit</a>
         </div>
 
         @if (!empty($post->path_img))
