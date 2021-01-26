@@ -79,6 +79,11 @@ class PostController extends Controller
         $post = Post::where('slug', $slug)->first();
         //dump($post);
 
+        //facciamo un check per vedere se esiste un post
+        if (empty($post)) {
+            abort(404);
+        }
+
         return view('posts.show', compact('post'));
     }
 
@@ -91,6 +96,10 @@ class PostController extends Controller
     public function edit($slug)
     {
        $post = Post::where('slug', $slug)->first();
+
+       if (empty($post)) {
+        abort(404);
+    }
        
        return view('posts.edit', compact('post'));
     }
@@ -141,9 +150,22 @@ class PostController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Post $post)
     {
-        //
+        //$post = Post::find($id); commentata perche usiamo la versione short (Post $post)à
+
+        $title = $post->title;  //assegnamo il titolo ad una variabile $title
+        $image = $post->path_img;  //assegnamo ad img ad una variabile $image
+        $deleted = $post->delete();  //metodo per cancellare il titolo
+
+        if ($deleted) {   //verifica se c'è un post associato
+            if (!empty($image)) {
+                Storage::disk('public')->delete($image);
+            }
+            return redirect()->route('posts.index')->with('post-deleted', $title);
+        } else {
+            return redirect()->route('home');
+        }
     }
 
     // funzione rule validation
