@@ -13,4 +13,9 @@ class Post extends Model
         'path_img'
 
     ];
+
+    // posts - tags
+    public function tags() {
+        return $this->belongsToMany('App\Tag');
+    }
 }

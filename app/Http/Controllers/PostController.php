@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Post;
+use App\Tag;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;                                   
 
@@ -28,7 +29,10 @@ class PostController extends Controller
      */
     public function create()
     {
-        return view('posts.create');
+        //prendimo tutti i tag
+        $tags = Tag::all();
+
+        return view('posts.create', compact('tags'));
     }
 
     /**
@@ -60,6 +64,13 @@ class PostController extends Controller
         $saved = $newPost->save();
 
         if($saved) {
+            if (!empty($data['tags'])) {
+                $newPost->tags()->attach($data['tags']);
+
+                //cerca la pivot di questa relazione posts - tags
+                
+            }
+
             return redirect()->route('posts.index'); //('newPost.show,$newPost->id');
         } else {
             return redirect()->route('home');
@@ -96,12 +107,13 @@ class PostController extends Controller
     public function edit($slug)
     {
        $post = Post::where('slug', $slug)->first();
+       $tags = Tag::all();
 
        if (empty($post)) {
         abort(404);
     }
        
-       return view('posts.edit', compact('post'));
+       return view('posts.edit', compact('post', 'tags'));
     }
 
     /**
@@ -136,8 +148,14 @@ class PostController extends Controller
          //aggiornare/update db
          $updated = $post->update($data); //ha bisogno di fillable nel model(già messo)
 
-         //verifichiamo se update è andato a buon fine
+         //verifichiamo se update è andato a buon fine (guardare i return)
          if ($updated) {
+            if (!empty($data['tags'])) { 
+                $post->tags()->sync($data['tags']);    //metodi se editando cambiamo le preferenze in checkbox
+            }else {
+                $post->tags()->detach();  //o le cancelliamo ttt
+            }
+
             return redirect()->route('posts.show', $post->slug);
          } else {
             return redirect()->route('home');
@@ -156,6 +174,8 @@ class PostController extends Controller
 
         $title = $post->title;  //assegnamo il titolo ad una variabile $title
         $image = $post->path_img;  //assegnamo ad img ad una variabile $image
+
+        $post->tags()->detach();  //cancellare la relazine tra posts e tags
         $deleted = $post->delete();  //metodo per cancellare il titolo
 
         if ($deleted) {   //verifica se c'è un post associato

@@ -15,6 +15,17 @@
             </form>
         </div>
 
+        {{-- tag --}}
+        <section class="tags">
+            <h3>tags</h3>
+            @forelse ($post->tags as $tag)
+               <span class="badge badge-primary">{{ $tag->name }}</span> 
+            @empty
+                <p>Nessun tag per questo post</p>
+            @endforelse
+        </section>
+
+        {{-- img --}}
         @if (!empty($post->path_img))
             <img src="{{ asset('storage/' . $post->path_img) }}" alt="{{ $post->title }}">
         @else 
